@@ -29,28 +29,28 @@ public class LivenessValidationExceptionHandler {
     public ResponseEntity<ErrorResponse> handleSessionNotFound(SessionNotFoundException ex) {
         log.warn("Session not found during validation: {}", ex.getMessage());
         return buildResponse(RejectionReason.SESSION_NOT_FOUND,
-                "Sessão não encontrada ou expirada. Inicie uma nova sessão e tente novamente.");
+                "Sessão não encontrada ou expirada. Inicie uma nova sessão e tente novamente");
     }
 
     @ExceptionHandler(SpoofingDetectedException.class)
     public ResponseEntity<ErrorResponse> handleSpoofingDetected(SpoofingDetectedException ex) {
         log.warn("Spoofing detected during liveness validation: {}", ex.getMessage());
         return buildResponse(RejectionReason.SPOOFING_DETECTED,
-                "Validação de liveness reprovada. Certifique-se de usar uma imagem real e tente novamente.");
+                "A análise de biometria facial indicou uma possível tentativa de fraude.");
     }
 
     @ExceptionHandler(FaceMismatchException.class)
     public ResponseEntity<ErrorResponse> handleFaceMismatch(FaceMismatchException ex) {
         log.warn("Face mismatch detected: {}", ex.getMessage());
         return buildResponse(RejectionReason.FACE_MISMATCH,
-                "Rosto não reconhecido. A biometria não corresponde ao cadastro.");
+                "O rosto enviado não corresponde ao cadastro existente.");
     }
 
     @ExceptionHandler(PoorQualityImageException.class)
     public ResponseEntity<ErrorResponse> handlePoorQuality(PoorQualityImageException ex) {
         log.warn("Poor quality image rejected: {}", ex.getMessage());
         return buildResponse(RejectionReason.POOR_QUALITY,
-                "Qualidade da imagem insuficiente. Melhore a iluminação e o foco e tente novamente.");
+                "A análise de biometria facial indicou que a qualidade da imagem é insuficiente para validação, tente novamente.");
     }
 
     private ResponseEntity<ErrorResponse> buildResponse(RejectionReason reason, String message) {
