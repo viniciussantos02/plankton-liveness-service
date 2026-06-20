@@ -1,0 +1,206 @@
+openapi: 3.0.3
+
+info:
+  title: Plankton Liveness Service
+  description: Microsserviço de orquestração de biometria facial (Facial Liveness e Face Match) com infraestrutura AWS.
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:8080
+    description: Local development
+
+tags:
+  - name: Liveness Sessions
+    description: Gerenciamento de sessões de validação biométrica
+
+paths:
+  /api/v1/liveness/sessions:
+    post:
+      tags:
+        - Liveness Sessions
+      summary: Inicializar sessão de liveness
+      description: Cria uma sessão temporária de liveness atrelada a um CPF e ID de dispositivo. A sessão expira em 5 minutos (TTL estrito).
+      operationId: createSession
+      parameters:
+        - name: X-Device-ID
+          in: header
+          required: true
+          schema:
+            type: string
+            example: bbb111_origem
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateSessionRequest'
+      responses:
+        '201':
+          description: Sessão criada com sucesso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateSessionResponse'
+        '400':
+          description: Dados inválidos na requisição
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                status: REJECTED
+                reason: INVALID_REQUEST
+                message: "Problemas ao iniciar a sessão de liveness. Verifique os dados enviados e tente novamente."
+
+  /api/v1/liveness/sessions/{sessionId}/validate:
+    post:
+      tags:
+        - Liveness Sessions
+      summary: Enviar e validar biometria facial
+      description: |
+        Recebe a selfie do dispositivo e executa um dos três fluxos:
+        - **Fast Track**: dispositivo confiável no Redis → aprova sem chamar IA
+        - **Cenário A (Cadastro)**: CPF sem foto de referência no S3 → valida liveness e salva referência
+        - **Cenário B (Re-validação)**: CPF com foto no S3 → valida liveness + face match
+      operationId: validateBiometrics
+      parameters:
+        - name: sessionId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+            example: 6a7b8c9d-e1f2-3a4b-5c6d-7e8f9a0b1c2d
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - file
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: Imagem binária da selfie capturada (.png ou .jpeg)
+      responses:
+        '200':
+          description: Biometria validada com sucesso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidateResponse'
+        '422':
+          description: Sessão inválida ou falha na validação biométrica
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                session_not_found:
+                  summary: Sessão expirada ou inexistente
+                  value:
+                    status: REJECTED
+                    reason: SESSION_NOT_FOUND
+                    message: "A sessão de liveness informada expirou ou não existe."
+                spoofing_detected:
+                  summary: Tentativa de fraude detectada
+                  value:
+                    status: REJECTED
+                    reason: SPOOFING_DETECTED
+                    message: "A análise de biometria facial indicou uma possível tentativa de fraude."
+                face_mismatch:
+                  summary: Rosto diferente do cadastrado
+                  value:
+                    status: REJECTED
+                    reason: FACE_MISMATCH
+                    message: "O rosto enviado não corresponde ao cadastro existente."
+                poor_quality:
+                  summary: Imagem de baixa qualidade
+                  value:
+                    status: REJECTED
+                    reason: POOR_QUALITY
+                    message: "A análise de biometria facial indicou que a qualidade da imagem é insuficiente para validação, tente novamente."
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    CreateSessionRequest:
+      type: object
+      required:
+        - cpf
+        - origin
+      properties:
+        cpf:
+          type: string
+          description: CPF do usuário (somente dígitos)
+          pattern: '^\d{11}$'
+          example: "22222222222"
+        origin:
+          type: string
+          description: Identificador do sistema de origem
+          example: bank123
+
+    CreateSessionResponse:
+      type: object
+      properties:
+        sessionId:
+          type: string
+          format: uuid
+          description: Identificador único da sessão criada
+          example: 6a7b8c9d-e1f2-3a4b-5c6d-7e8f9a0b1c2d
+        status:
+          $ref: '#/components/schemas/SessionStatus'
+        ttlInSeconds:
+          type: integer
+          description: Tempo de vida da sessão em segundos
+          example: 300
+
+    ValidateResponse:
+      type: object
+      properties:
+        status:
+          $ref: '#/components/schemas/SessionStatus'
+        verificationToken:
+          type: string
+          description: JWT assinado atestando o sucesso da validação biométrica
+          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+
+    ErrorResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          enum:
+            - REJECTED
+        reason:
+          $ref: '#/components/schemas/RejectionReason'
+        message:
+          type: string
+          description: Mensagem descritiva do erro para o cliente
+
+    SessionStatus:
+      type: string
+      enum:
+        - INITIALIZED
+        - VALIDATED
+        - REJECTED
+      description: Estado da sessão de liveness
+
+    RejectionReason:
+      type: string
+      enum:
+        - SPOOFING_DETECTED
+        - FACE_MISMATCH
+        - POOR_QUALITY
+        - SESSION_NOT_FOUND
+        - INVALID_REQUEST
+      description: Motivo de rejeição da validação biométrica
