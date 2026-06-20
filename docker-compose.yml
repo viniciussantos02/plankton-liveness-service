@@ -1,0 +1,28 @@
+services:
+  redis:
+    image: redis:7-alpine
+    container_name: plankton-redis
+    ports:
+      - "6379:6379"
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redisinsight:
+    image: redis/redisinsight:2.60
+    container_name: plankton-redisinsight
+    ports:
+      - "8001:5540"
+    depends_on:
+      - redis
+    volumes:
+      - redisinsight-data:/data
+
+volumes:
+  redis-data:
+  redisinsight-data:

@@ -1,0 +1,25 @@
+spring:
+  application:
+    name: plankton-liveness-service
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+
+server:
+  port: 8080
+
+aws:
+  region: us-east-1
+  s3:
+    bucket: plankton-liveness-biometrics
+rekognition:
+  liveness:
+    confidence-threshold: 90.0
+  face-match:
+    similarity-threshold: 90.0
+crypto:
+  cpf-hash-secret: ${CPF_HASH_SECRET}
+jwt:
+  secret: ${JWT_SECRET}
+  ttl-seconds: 300
