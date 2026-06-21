@@ -93,7 +93,7 @@ Prepara o ambiente e gera o identificador temporário que o SDK mobile utilizar�
     {
       "status": "REJECTED",
       "reason": "INVALID_REQUEST",
-      "message": "Problemas ao iniciar a sessão de liveness. Verifique os dados enviados e tente novamente."
+      "message": "Sessão não encontrada ou expirada. Inicie uma nova sessão e tente novamente"
     }
     ```
 
