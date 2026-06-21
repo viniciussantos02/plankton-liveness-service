@@ -88,7 +88,7 @@ Este serviço resolve os três problemas com um fluxo orquestrado de Liveness + 
 
 ## 7. Contratos de API
 
-Fonte de verdade: [`openapi.yaml`](./openapi.yaml). Nunca implementar endpoints fora do spec.
+Fonte de verdade: [`openapi.yaml`](../src/main/resources/static/openapi.yaml). Nunca implementar endpoints fora do spec.
 
 ### POST /api/v1/liveness/sessions
 - Header obrigatório: `X-Device-ID`
