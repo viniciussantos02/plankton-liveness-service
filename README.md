@@ -1,6 +1,6 @@
 # plankton-liveness-service
 
-Microsserviço Java responsável pela orquestração do fluxo de biometria facial e antifraude (*Facial Liveness* e *Face Match*) utilizando infraestrutura real AWS.
+Microsserviço Java responsável pela orquestração do fluxo de biometria facial e antifraude (*Facial Liveness* e *Face Match*) utilizando infraestrutura real AWS. O SDD(Spec-Driven-Development) foi usado aqui para desenvolvimento como teste da abordagem, e foi usado o Claude Code para implementacao do SDD.
 
 ---
 
