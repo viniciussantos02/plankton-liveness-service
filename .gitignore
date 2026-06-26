@@ -66,3 +66,10 @@ out/
 
 ### MacOS ###
 .DS_Store
+
+### Imagens de teste (nunca commitar fotos de rosto reais) ###
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.bmp
