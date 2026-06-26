@@ -47,7 +47,7 @@ class CryptoUtilsTest {
     void hash_retornaHexadecimalLowercase() {
         String resultado = cryptoUtils.hash("12345678901");
 
-        assertThat(resultado).matches("[0-9a-f]+");
+        assertThat(resultado).matches("[a-f0-9]{64}");
     }
 
     @Test
@@ -55,6 +55,15 @@ class CryptoUtilsTest {
         String resultado = cryptoUtils.hash("12345678901");
 
         assertThat(resultado).hasSize(64);
+    }
+
+    @Test
+    void hash_naoContemCpfEmPlainText() {
+        String cpf = "12345678901";
+
+        String resultado = cryptoUtils.hash(cpf);
+
+        assertThat(resultado).doesNotContain(cpf);
     }
 
     @Test
