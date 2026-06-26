@@ -294,9 +294,62 @@ src/main/java/com/plankton/liveness/
 
 ## Executando os Testes
 
+### Testes Unitários
+
+Não requerem AWS nem Redis. Rodam isolados com mocks.
+
 ```bash
 mvn test
 ```
+
+### Testes de Integração E2E (Ambiente Real AWS)
+
+Conectam à AWS real (S3 e Rekognition) e ao Redis local. Requerem o ambiente completo configurado.
+
+**Pré-requisitos:**
+- Redis rodando localmente (`docker compose up -d`)
+- Credenciais AWS configuradas (`aws configure` ou variáveis de ambiente)
+- Imagens de rosto reais disponíveis em paths locais (não commitadas no repositório)
+
+**Variáveis de ambiente obrigatórias:**
+
+| Variável | Descrição |
+|----------|-----------|
+| `CPF_HASH_SECRET` | Salt para o HMAC-SHA256 do CPF |
+| `JWT_SECRET` | Chave de assinatura JWT (mínimo 32 bytes) |
+| `AWS_ACCESS_KEY_ID` | Access key AWS (ou via `~/.aws/credentials`) |
+| `AWS_SECRET_ACCESS_KEY` | Secret key AWS (ou via `~/.aws/credentials`) |
+| `TEST_FACE_IMAGE_PATH` | Path local de uma foto com rosto humano válido (Cenários A, B, D2) |
+| `TEST_FACE_B_IMAGE_PATH` | Path local de um rosto **diferente** do anterior (Cenário D2) |
+
+> Sem `TEST_FACE_IMAGE_PATH` e `TEST_FACE_B_IMAGE_PATH` definidos, os Cenários A, B e D2 são pulados (`SKIPPED`) — não falham. Para cobertura completa, essas variáveis são obrigatórias.
+
+**Como rodar:**
+
+```bash
+# 1. Suba o Redis local
+docker compose up -d
+
+# 2. Exporte as variáveis
+export CPF_HASH_SECRET=<secret>
+export JWT_SECRET=<secret-minimo-32-bytes>
+export TEST_FACE_IMAGE_PATH=/caminho/para/foto-com-rosto.png
+export TEST_FACE_B_IMAGE_PATH=/caminho/para/foto-rosto-diferente.png
+
+# 3. Execute os testes de integração
+mvn verify -Pintegration
+```
+
+**Cenários cobertos:**
+
+| Cenário | Descrição | Resultado esperado |
+|---------|-----------|-------------------|
+| A | Primeiro acesso — `detectFaces` + upload S3 | JWT `ACTIVE_VERIFIED` |
+| B | Re-validação — `compareFaces` via S3 pointer + nova versão no bucket | JWT `ACTIVE_VERIFIED` |
+| C | Fast Track — `device:trust` ativa no Redis | JWT `ACTIVE_BY_CACHE` em ≤ 100ms |
+| D1 | Imagem sem rosto | HTTP 422 `SPOOFING_DETECTED`/`POOR_QUALITY` |
+| D2 | Rosto diferente da referência cadastrada | HTTP 422 `FACE_MISMATCH` |
+| D3 | Sessão expirada ou inexistente | HTTP 422 `SESSION_NOT_FOUND` |
 
 ---
 
