@@ -66,6 +66,7 @@ public class AwsRekognitionAdapter {
      * @param imageBytes bytes da imagem enviada pelo cliente
      * @return {@code true} se o liveness foi aprovado
      */
+    //TODO remover retorno boolean sem uso
     public boolean validateLiveness(byte[] imageBytes) {
         Image image = Image.builder()
                 .bytes(SdkBytes.fromByteArray(imageBytes))
