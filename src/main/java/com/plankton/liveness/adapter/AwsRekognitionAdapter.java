@@ -52,21 +52,7 @@ public class AwsRekognitionAdapter {
     @Value("${rekognition.image-quality.min-sharpness}")
     private float minSharpness;
 
-    /**
-     * Valida liveness detectando um rosto humano real na imagem enviada.
-     *
-     * <p>A imagem é transmitida inteiramente em memória — nunca via ponteiro S3.
-     * Lança exceção imediatamente se:
-     * <ul>
-     *   <li>Nenhum rosto detectado → {@link SpoofingDetectedException}</li>
-     *   <li>Confiança abaixo de {@code rekognition.liveness.confidence-threshold} → {@link SpoofingDetectedException}</li>
-     *   <li>Brightness ou sharpness insuficientes → {@link PoorQualityImageException}</li>
-     * </ul>
-     *
-     * @param imageBytes bytes da imagem enviada pelo cliente
-     * @return {@code true} se o liveness foi aprovado
-     */
-    public boolean validateLiveness(byte[] imageBytes) {
+    public void validateLiveness(byte[] imageBytes) {
         Image image = Image.builder()
                 .bytes(SdkBytes.fromByteArray(imageBytes))
                 .build();
@@ -108,7 +94,6 @@ public class AwsRekognitionAdapter {
         }
 
         log.info("Rekognition liveness validated. confidence={}", confidence);
-        return true;
     }
 
     /**

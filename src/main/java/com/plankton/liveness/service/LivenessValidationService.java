@@ -59,21 +59,17 @@ public class LivenessValidationService {
      */
     public ValidateResponse validateBiometrics(String sessionId, byte[] imageBytes) {
 
-        // 1. Buscar sessão no Redis
         LivenessSession session = (LivenessSession) redisTemplate.opsForValue().get(sessionId);
         if (session == null) {
             log.warn("Session not found or expired. sessionId={}", sessionId);
             throw new SessionNotFoundException(sessionId);
         }
 
-        // 2. Extrair dados da sessão
         String cpf      = session.getCpf();
         String deviceId = session.getDeviceId();
         String origin   = session.getOrigin();
         log.info("Validating biometrics. sessionId={}, deviceId={}", sessionId, deviceId);
 
-        // 3. Verificar Device Trust — Fast Track
-        // A chave usa CPF em plain text (nunca hasheado), conforme especificação H5
         String trustKey = "device:trust:" + deviceId + ":" + cpf;
         boolean isTrusted = redisTemplate.hasKey(trustKey);
 
@@ -84,47 +80,35 @@ public class LivenessValidationService {
                     jwtTokenProvider.generate(cpf, deviceId, origin, TokenState.ACTIVE_BY_CACHE));
         }
 
-        // 4. Montar chave S3 ofuscada — o CPF nunca aparece na chave S3
         String obfuscatedKey = "profiles/" + cryptoUtils.hash(cpf) + "/reference.png";
 
-        // 5. Verificar se já existe imagem de referência no S3
         boolean referenceExists = s3StorageAdapter.exists(obfuscatedKey);
 
         if (!referenceExists) {
-            // CENÁRIO A: primeira biometria — sem comparação de rostos
             log.info("Reference image not found. Running Scenario A (first biometric). sessionId={}", sessionId);
 
-            // a. Validar liveness
             rekognitionAdapter.validateLiveness(imageBytes);
 
-            // b. Persistir como imagem de referência
             s3StorageAdapter.upload(obfuscatedKey, imageBytes);
 
-            // 6. Registrar Device Trust com TTL 30 dias (Cenário A)
             redisTemplate.opsForValue().set(trustKey, "trusted", DEVICE_TRUST_TTL);
             redisTemplate.delete(sessionId);
             log.info("Scenario A completed. Reference image stored and device trust registered. sessionId={}", sessionId);
 
         } else {
-            // CENÁRIO B: biometria recorrente — liveness + face match
             log.info("Reference image found. Running Scenario B (recurring biometric). sessionId={}", sessionId);
 
-            // a. Validar liveness
             rekognitionAdapter.validateLiveness(imageBytes);
 
-            // b. Comparar com imagem de referência via S3Object pointer (sem download)
             rekognitionAdapter.compareFaces(obfuscatedKey, imageBytes);
 
-            // c. Sobrescrever referência com a selfie mais recente
             s3StorageAdapter.upload(obfuscatedKey, imageBytes);
 
-            // 6. Registrar/renovar Device Trust com TTL 30 dias (Cenário B)
             redisTemplate.opsForValue().set(trustKey, "trusted", DEVICE_TRUST_TTL);
             redisTemplate.delete(sessionId);
             log.info("Scenario B completed. Reference image updated and device trust refreshed. sessionId={}", sessionId);
         }
 
-        // 7. Retornar resposta com JWT assinado — aprovação via IA
         return new ValidateResponse(SessionStatus.VALIDATED,
                 jwtTokenProvider.generate(cpf, deviceId, origin, TokenState.ACTIVE_VERIFIED));
     }
