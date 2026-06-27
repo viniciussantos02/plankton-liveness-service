@@ -2,7 +2,7 @@ package com.plankton.liveness.enums;
 
 /**
  * Motivo de rejeição da validação biométrica ou da criação de sessão.
- * Valores conforme {@code openapi.yaml}.
+ * Valores conforme {@code plankton-liveness-service-api.yaml}.
  */
 public enum RejectionReason {
     SPOOFING_DETECTED,
