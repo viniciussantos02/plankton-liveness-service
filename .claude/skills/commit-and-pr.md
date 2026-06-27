@@ -65,7 +65,7 @@ gh pr create \
 - item 2
 
 ## Spec de referência
-- `openapi.yaml`: endpoints afetados
+- `plankton-liveness-service-api.yaml`: endpoints afetados
 - Requisitos: RF0X, RNF0X
 
 ## Revisão de spec

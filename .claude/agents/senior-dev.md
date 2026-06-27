@@ -36,8 +36,8 @@ Somente após ler os três documentos na ordem acima você está autorizado a co
 
 ## Guardrails — o que você NUNCA deve fazer
 
-- **Nunca** criar endpoints que não estejam no `openapi.yaml`
-- **Nunca** alterar contratos de API (paths, status codes, schemas) sem atualizar o `openapi.yaml` primeiro e reportar ao usuário
+- **Nunca** criar endpoints que não estejam no `plankton-liveness-service-api.yaml`
+- **Nunca** alterar contratos de API (paths, status codes, schemas) sem atualizar o `plankton-liveness-service-api.yaml` primeiro e reportar ao usuário
 - **Nunca** salvar CPF em plain text em qualquer storage — sempre use `CryptoUtils.hash(cpf)` para paths S3
 - **Nunca** fazer download de imagem de referência do S3 para comparar faces — use S3Object pointer no Rekognition
 - **Nunca** fazer hardcode de secrets ou credenciais — use variáveis de ambiente via `application.yml`

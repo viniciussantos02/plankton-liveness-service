@@ -229,12 +229,19 @@ Recebe o arquivo binário da foto tirada pelo dispositivo e decide o fluxo de va
 #### História 7: Cobertura de Testes Unitários (Qualidade de Código)
 > **Como** engenheiro de software do projeto,  
 > **Quero** criar testes unitários isolados utilizando JUnit 5 e Mockito,  
-> **Para** garantir a estabilidade das funções internas e regras de negócio sem depender de serviços externos ativos.
+> **Para** garantir a estabilidade das funções internas e regras de negócio sem depender de serviços externos ativos,  
+> **com cobertura mínima de 80% para o projeto inteiro** (medida pelo Jacoco sobre todas as classes de produção).
 * **Subtasks:**
   * [ ] Criar testes unitários para o componente `CryptoUtils`, validando se a função de hash SHA-256 é estritamente determinística e reage corretamente a variações de Secret/Salt.
   * [ ] Criar testes unitários para o `JwtTokenProvider`, garantindo a correta inserção e leitura de claims customizados e validando o comportamento com tokens expirados.
   * [ ] Criar testes unitários para a classe de negócio principal `LivenessValidationService` utilizando `@Mock` para simular as respostas de sucesso e falha controladas do `S3StorageAdapter` e do `AwsRekognitionAdapter`.
   * [ ] Garantir cobertura completa dos fluxos de exceção (`SpoofingDetectedException`, `PoorQualityImageException`, etc.), verificando se os métodos disparam os erros corretos diante de respostas simuladas e negativas da IA.
+  * [ ] Criar testes unitários para `S3StorageAdapter`, cobrindo os métodos `exists` e `upload` com `@Mock` no `S3Client` — nunca chamar AWS real.
+  * [ ] Criar testes unitários para `AwsRekognitionAdapter`, cobrindo todos os caminhos de `validateLiveness` e `compareFaces` com `@Mock` no `RekognitionClient`, verificando que a imagem de referência trafega via S3Object pointer e nunca via download.
+  * [ ] Criar testes unitários para `AwsConfig`, instanciando a classe diretamente (sem contexto Spring) e validando que os beans `S3Client` e `RekognitionClient` são criados sem erro.
+  * [ ] Criar testes unitários para `RedisConfig`, instanciando a classe diretamente e validando que o `RedisTemplate` retornado usa `StringRedisSerializer` para keys/hash-keys e `GenericJackson2JsonRedisSerializer` para values/hash-values.
+  * [ ] Criar testes unitários para `LivenessValidationExceptionHandler`, cobrindo o mapeamento de cada exceção de validação (`SessionNotFoundException`, `SpoofingDetectedException`, `FaceMismatchException`, `PoorQualityImageException`) para o status HTTP 422 e o `RejectionReason` correto.
+  * [ ] Confirmar via relatório Jacoco que a cobertura global do projeto atingiu no mínimo **80%** de instruções antes de encerrar a história.
 
 #### História 8: Testes de Fluxo de Integração Ponta a Ponta (Ambiente Real AWS)
 > **Como** validador de qualidade e segurança do sistema,  

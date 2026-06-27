@@ -43,7 +43,7 @@ Para cada item listado na seção "Acceptance Criteria" do `specs/historia-N.md`
 
 ### 2. Conformidade com OpenAPI
 
-- [ ] Todos os endpoints implementados existem no `openapi.yaml`?
+- [ ] Todos os endpoints implementados existem no `plankton-liveness-service-api.yaml`?
 - [ ] Os paths, métodos HTTP e path variables batem exatamente com a spec?
 - [ ] Os status codes de sucesso e erro correspondem à spec?
 - [ ] Os schemas dos request/response bodies batem com os definidos?
