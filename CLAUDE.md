@@ -10,7 +10,7 @@ Leia-o integralmente antes de escrever qualquer código.
 Microsserviço Java Spring Boot responsável pela orquestração do fluxo de biometria facial e antifraude (**Facial Liveness** e **Face Match**) utilizando AWS Rekognition e S3.
 
 - **Spec de referência:** [`openapi.yaml`](src/main/resources/static/openapi.yaml) — fonte de verdade dos contratos de API
-- **Plano de execução:** [`plankton-liveness-service-execution-plan.md`](specs/plankton-liveness-service-execution-plan.md) — backlog e requisitos detalhados
+- **Plano de execução:** [`plankton-liveness-service-execution-plan.md`](.specs/plankton-liveness-service-execution-plan.md) — backlog e requisitos detalhados
 
 ---
 
